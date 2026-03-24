@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Library</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .add-btn {
+            background: #4CAF50;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+        }
+
+        .edit-btn {
+            background: #3498db;
+        }
+
+        .book {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .actions button {
+            margin-left: 5px;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+    <h1>📚 Library</h1>
+
+    <div class="form">
+        <input type="text" id="title" placeholder="Title">
+        <input type="text" id="author" placeholder="Author">
+        <button class="add-btn" onclick="addBook()">Add</button>
+    </div>
+
+    <div id="bookList"></div>
+</div>
+
+<script>
+    function loadBooks() {
+        fetch('/books')
+            .then(res => res.json())
+            .then(data => {
+                let html = '';
+                data.forEach(book => {
+                    html += `
+                        <div class="book">
+                            <span>${book.title} by ${book.author}</span>
+                            <div class="actions">
+                                <button class="delete-btn" onclick="deleteBook(${book.id})">Delete</button>
+                                <button class="edit-btn" onclick="editBook(${book.id})">Edit</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                document.getElementById("bookList").innerHTML = html;
+            });
+    }
+
+    function addBook() {
+        let title = document.getElementById("title").value;
+        let author = document.getElementById("author").value;
+
+        if (!title || !author) {
+            alert("Fill all fields");
+            return;
+        }
+
+        fetch('/books', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title, author, available: true})
+        }).then(() => {
+            document.getElementById("title").value = "";
+            document.getElementById("author").value = "";
+            loadBooks();
+        });
+    }
+
+    function deleteBook(id) {
+        fetch('/books/' + id, {
+            method: 'DELETE'
+        }).then(() => loadBooks());
+    }
+
+    function editBook(id) {
+        let newTitle = prompt("New title:");
+        let newAuthor = prompt("New author:");
+
+        fetch('/books/' + id, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({title: newTitle, author: newAuthor, available: true})
+        }).then(() => loadBooks());
+    }
+
+    loadBooks();
+</script>
+
+</body>
+</html>
